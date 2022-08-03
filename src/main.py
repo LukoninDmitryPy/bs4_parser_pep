@@ -1,15 +1,17 @@
-import re
-from urllib.parse import urljoin
-import requests_cache
-from bs4 import BeautifulSoup
-from tqdm import tqdm
-from outputs import control_output
 import logging
+import re
+import requests_cache
+
+from bs4 import BeautifulSoup
+from collections import defaultdict
+from tqdm import tqdm
+from urllib.parse import urljoin
+
 from configs import configure_argument_parser, configure_logging
 from constants import BASE_DIR, MAIN_DOC_URL, PEP_URL
-from utils import get_response, find_tag, check_status_for_rule
 from exceptions import UncorrentStatusException
-from collections import defaultdict
+from outputs import control_output
+from utils import get_response, find_tag, check_status_for_rule
 
 
 def whats_new(session):
@@ -120,6 +122,7 @@ def pep(session):
                 response.text, features='lxml'
             )
             href = link_and_text['href']
+            name_of_rule = tr_tag.a.attrs['title']
             status_from_main_page = tr_tag.td.text
             status_from_page = parse_status(session, href)
             try:
@@ -130,7 +133,7 @@ def pep(session):
                 )
             except UncorrentStatusException as error:
                 logging.error(error)
-                print(error)
+            results.append([status_from_page,  PEP_URL + href, name_of_rule])
     results.extend(pep_status_count.items())
     results.append(('Total: ', total_pep_count))
     return results
